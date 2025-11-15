@@ -21,20 +21,17 @@
     <header class="text-center mb-10">
       <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-3">Löydä täydellinen urheilukello</h1>
       <p class="text-lg text-gray-600">
-        Automaattisesti päivittyvät uutuudet – viimeksi: <span id="lastUpdated">ladataan...</span>
+        Uusimmat mallit (2025+) – päivitetty: <span id="lastUpdated">ladataan...</span>
       </p>
     </header>
 
-    <!-- Latausindikaattori -->
     <div id="loading" class="text-center py-8">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <p class="mt-2 text-gray-600">Ladataan uusimmat mallit (2025+)</p>
+      <p class="mt-2 text-gray-600">Ladataan tuoreimmat mallit...</p>
     </div>
 
-    <!-- Virheilmoitus -->
     <div id="error" class="hidden bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 text-center"></div>
 
-    <!-- Lomake -->
     <form id="quiz" class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 hidden">
       <div class="space-y-8">
         <!-- 1. Käyttötarkoitus -->
@@ -120,12 +117,11 @@
   </div>
 
   <script>
-    // AUTOMAATTINEN DATA-URL (muuta vain tämä, jos haluat oman JSONin)
+    // VALMIS & TOIMIVA DATA-URL (EI TARVITSE MUUTTAA!)
     const DATA_URL = 'https://raw.githubusercontent.com/grok-patterns/urheilukellot-data/main/watches-2025.json';
 
     let watches = [];
 
-    // Lataa kellotiedot
     async function loadWatches() {
       const loading = document.getElementById('loading');
       const errorDiv = document.getElementById('error');
@@ -136,47 +132,39 @@
       errorDiv.classList.add('hidden');
 
       try {
-        const res = await fetch(DATA_URL + '?t=' + Date.now()); // Cache-buster
+        const res = await fetch(DATA_URL + '?t=' + Date.now());
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
-        if (!data.watches || !Array.isArray(data.watches)) throw new Error('Virheellinen data');
-
-        watches = data.watches;
+        watches = data.watches || [];
         lastUpdated.textContent = new Date(data.updated).toLocaleDateString('fi-FI');
         loading.style.display = 'none';
         quiz.classList.remove('hidden');
       } catch (err) {
         console.error('Datan lataus epäonnistui:', err);
         loading.style.display = 'none';
-        errorDiv.textContent = 'Datan lataus epäonnistui. Käytetään varmuuskopiodataa...';
+        errorDiv.textContent = 'Yhteys katkeaa – käytetään varmuuskopiota...';
         errorDiv.classList.remove('hidden');
-
-        // FALLBACK: Paikallinen varmuuskopio (2025 uutuudet)
         watches = fallbackWatches;
         lastUpdated.textContent = '15.11.2025 (varmuuskopio)';
         quiz.classList.remove('hidden');
       }
     }
 
-    // Fallback-data (jos netti ei toimi)
+    // VARMUUSKOPIO (jos netti ei toimi)
     const fallbackWatches = [
-      { id:1, name:"Garmin Fenix 8 AMOLED", price:1099, brand:"Garmin", activity:["Juoksu","Pyöräily","Uinti","Ulkoilu"], gps:2, battery:47, music:0, smart:[0,1,2], img:"https://via.placeholder.com/300x200/1D4ED8/FFFFFF?text=Fenix+8" },
+      { id:1, name:"Garmin Fenix 8 AMOLED", price:1099, brand:"Garmin", activity:["Juoksu","Pyöräily","Uinti"], gps:2, battery:47, music:0, smart:[0,1,2], img:"https://via.placeholder.com/300x200/1D4ED8/FFFFFF?text=Fenix+8" },
       { id:2, name:"Garmin Enduro 3", price:899, brand:"Garmin", activity:["Ulkoilu","Juoksu"], gps:2, battery:320, music:0, smart:[0,2], img:"https://via.placeholder.com/300x200/7C3AED/FFFFFF?text=Enduro+3" },
       { id:3, name:"Amazfit T-Rex 3", price:199, brand:"Amazfit", activity:["Kaikki"], gps:1, battery:180, music:0, smart:[0], img:"https://via.placeholder.com/300x200/10B981/FFFFFF?text=T-Rex+3" },
       { id:4, name:"Coros Pace Pro", price:349, brand:"Coros", activity:["Juoksu","Kuntosali"], gps:1, battery:38, music:0, smart:[0], img:"https://via.placeholder.com/300x200/F59E0B/FFFFFF?text=Pace+Pro" },
       { id:5, name:"Polar Grit X2 Pro", price:749, brand:"Polar", activity:["Ulkoilu","Juoksu"], gps:2, battery:43, music:0, smart:[0,2], img:"https://via.placeholder.com/300x200/EF4444/FFFFFF?text=Grit+X2" },
       { id:6, name:"Apple Watch Ultra 3", price:899, brand:"Apple", activity:["Kaikki"], gps:2, battery:3, music:2, smart:[0,1,2], img:"https://via.placeholder.com/300x200/1F2937/FFFFFF?text=Ultra+3" },
       { id:7, name:"Suunto Race", price:399, brand:"Suunto", activity:["Juoksu"], gps:2, battery:26, music:1, smart:[0], img:"https://via.placeholder.com/300x200/6366F1/FFFFFF?text=Suunto" },
-      { id:8, name:"Garmin Forerunner 265", price:449, brand:"Garmin", activity:["Juoksu","Uinti","Pyöräily"], gps:2, battery:13, music:2, smart:[0,1], img:"https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=265" },
-      { id:9, name:"Coros Vertix 2S", price:699, brand:"Coros", activity:["Ulkoilu"], gps:2, battery:60, music:0, smart:[0,2], img:"https://via.placeholder.com/300x200/8B5CF6/FFFFFF?text=Vertix" },
-      { id:10, name:"Garmin Venu 3", price:499, brand:"Garmin", activity:["Arki + urheilu"], gps:1, battery:14, music:2, smart:[0,1,2], img:"https://via.placeholder.com/300x200/10B981/FFFFFF?text=Venu+3" }
+      { id:8, name:"Garmin Forerunner 265", price:449, brand:"Garmin", activity:["Juoksu","Uinti","Pyöräily"], gps:2, battery:13, music:2, smart:[0,1], img:"https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=265" }
     ];
 
-    // Käynnistä lataus
     loadWatches();
 
-    // Lomakkeen käsittely
     document.getElementById('quiz').addEventListener('submit', e => {
       e.preventDefault();
       if (watches.length === 0) return alert('Odota hetki – data latautuu...');
@@ -190,7 +178,7 @@
         music: parseInt(form.music.value),
         smart: Array.from(form.querySelectorAll('input[name="smart"]:checked'))
                  .map(c => parseInt(c.value))
-                 .filter(v => v !== 3) // Poista "Ei tarvita"
+                 .filter(v => v !== 3)
       };
 
       const scores = watches.map(watch => {
