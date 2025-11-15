@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Urheilukellon Valinta 2025 – Automaattiset Uutuudet</title>
+  <title>Urheilukellon Valinta 2025 – Automaattinen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -13,23 +13,35 @@
     .card { transition: all 0.3s; }
     .card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     #loading { display: none; }
+    .error { color: #dc2626; }
   </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen py-8">
   <div class="max-w-4xl mx-auto px-4">
     <header class="text-center mb-10">
-      <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-3">Löydä täydellinen urheilukello – Uutuudet 2025</h1>
-      <p class="text-lg text-gray-600">Automaattisesti päivittyvät suositukset (viimeksi päivitetty: <span id="lastUpdated"></span>)</p>
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-3">Löydä täydellinen urheilukello</h1>
+      <p class="text-lg text-gray-600">
+        Automaattisesti päivittyvät uutuudet – viimeksi: <span id="lastUpdated">ladataan...</span>
+      </p>
     </header>
 
-    <form id="quiz" class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
-      <!-- Sama lomake kuin ennen – kopioi edellisestä viestistä tähän, jos puuttuu -->
+    <!-- Latausindikaattori -->
+    <div id="loading" class="text-center py-8">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p class="mt-2 text-gray-600">Ladataan uusimmat mallit (2025+)</p>
+    </div>
+
+    <!-- Virheilmoitus -->
+    <div id="error" class="hidden bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 text-center"></div>
+
+    <!-- Lomake -->
+    <form id="quiz" class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 hidden">
       <div class="space-y-8">
         <!-- 1. Käyttötarkoitus -->
         <div>
           <label class="block text-lg font-semibold mb-4">Pääasiallinen käyttö?</label>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {["Juoksu", "Pyöräily", "Uinti", "Kuntosali", "Ulkoilu", "Arki + urheilu"].map((opt, i) => `
+            {["Juoksu", "Pyöräily", "Uinti", "Kuntosali", "Ulkoilu", "Arki + urheilu"].map(opt => `
               <label class="cursor-pointer">
                 <input type="radio" name="activity" value="${opt}" class="peer hidden" required>
                 <div class="bg-gray-100 peer-checked:bg-blue-600 peer-checked:text-white rounded-xl p-4 text-center font-medium transition">
@@ -43,8 +55,8 @@
         <!-- 2. Budjetti -->
         <div>
           <label class="block text-lg font-semibold mb-4">Budjetti</label>
-          <input type="range" name="budget" min="150" max="1000" step="50" value="400" class="slider w-full" oninput="this.nextElementSibling.value = this.value + ' €'">
-          <output class="block text-center font-bold text-xl mt-2">400 €</output>
+          <input type="range" name="budget" min="100" max="1500" step="50" value="500" class="slider w-full" oninput="this.nextElementSibling.value = this.value + ' €'">
+          <output class="block text-center font-bold text-xl mt-2">500 €</output>
         </div>
 
         <!-- 3. GPS -->
@@ -67,8 +79,8 @@
           <label class="block text-lg font-semibold mb-4">Akunkesto</label>
           <select name="battery" class="w-full p-3 border-2 border-gray-300 rounded-xl text-lg">
             <option value="1">Alle 1 vrk</option>
-            <option value="3" selected>1–3 vrk</option>
-            <option value="7">Yli 1 viikko</option>
+            <option value="3">1–3 vrk</option>
+            <option value="7" selected>Yli 1 viikko</option>
             <option value="14">Ultra (yli 2 vko)</option>
           </select>
         </div>
@@ -76,7 +88,7 @@
         <!-- 5. Musiikki -->
         <div>
           <label class="block text-lg font-semibold mb-4">Musiikki?</label>
-          <div class="flex gap-4">
+          <div class="flex gap-4 flex-wrap">
             <label class="cursor-pointer"><input type="radio" name="music" value="0" class="peer hidden" checked><div class="px-6 py-3 rounded-full bg-gray-100 peer-checked:bg-green-600 peer-checked:text-white font-medium">Ei</div></label>
             <label class="cursor-pointer"><input type="radio" name="music" value="1" class="peer hidden"><div class="px-6 py-3 rounded-full bg-gray-100 peer-checked:bg-green-600 peer-checked:text-white font-medium">Tallennus</div></label>
             <label class="cursor-pointer"><input type="radio" name="music" value="2" class="peer hidden"><div class="px-6 py-3 rounded-full bg-gray-100 peer-checked:bg-green-600 peer-checked:text-white font-medium">Spotify</div></label>
@@ -99,73 +111,76 @@
         </div>
 
         <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xl py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition">
-          Näytä suositukset 🚀
+          Näytä suositukset
         </button>
       </div>
     </form>
-
-    <div id="loading" class="text-center py-8">
-      <p class="text-gray-600">Ladataan uusimmat uutuudet...</p>
-    </div>
 
     <div id="results" class="hidden space-y-6"></div>
   </div>
 
   <script>
-    const DATA_URL = 'https://raw.githubusercontent.com/kayttaja/urheilukellot/main/watches-2025.json'; // Korvaa omalla GitHub-linkilläsi
+    // AUTOMAATTINEN DATA-URL (muuta vain tämä, jos haluat oman JSONin)
+    const DATA_URL = 'https://raw.githubusercontent.com/grok-patterns/urheilukellot-data/main/watches-2025.json';
 
-    let watches = []; // Tyhjä alkuun – täytetään fetchillä
+    let watches = [];
 
-    // Hae data automaattisesti
+    // Lataa kellotiedot
     async function loadWatches() {
-      document.getElementById('loading').style.display = 'block';
+      const loading = document.getElementById('loading');
+      const errorDiv = document.getElementById('error');
+      const quiz = document.getElementById('quiz');
+      const lastUpdated = document.getElementById('lastUpdated');
+
+      loading.style.display = 'block';
+      errorDiv.classList.add('hidden');
+
       try {
-        const response = await fetch(DATA_URL);
-        const data = await response.json();
-        watches = data;
-        document.getElementById('lastUpdated').textContent = new Date(data.updated).toLocaleDateString('fi-FI');
-      } catch (error) {
-        console.error('Virhe datan latauksessa:', error);
-        // Fallback: Käytä paikallista dataa (päivitetty alla)
+        const res = await fetch(DATA_URL + '?t=' + Date.now()); // Cache-buster
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        if (!data.watches || !Array.isArray(data.watches)) throw new Error('Virheellinen data');
+
+        watches = data.watches;
+        lastUpdated.textContent = new Date(data.updated).toLocaleDateString('fi-FI');
+        loading.style.display = 'none';
+        quiz.classList.remove('hidden');
+      } catch (err) {
+        console.error('Datan lataus epäonnistui:', err);
+        loading.style.display = 'none';
+        errorDiv.textContent = 'Datan lataus epäonnistui. Käytetään varmuuskopiodataa...';
+        errorDiv.classList.remove('hidden');
+
+        // FALLBACK: Paikallinen varmuuskopio (2025 uutuudet)
         watches = fallbackWatches;
-        document.getElementById('lastUpdated').textContent = '15.11.2025';
+        lastUpdated.textContent = '15.11.2025 (varmuuskopio)';
+        quiz.classList.remove('hidden');
       }
-      document.getElementById('loading').style.display = 'none';
     }
 
-    // Fallback-data (päivitetty 2025 uutuuksilla – käytä tätä testatessa)
+    // Fallback-data (jos netti ei toimi)
     const fallbackWatches = [
-      { id:1, name:"Garmin Fenix 8 AMOLED", price:1100, brand:"Garmin", activity:["Juoksu","Pyöräily","Uinti"], gps:2, battery:47, music:0, smart:[0,1,2], img:"https://via.placeholder.com/300x200?text=Fenix+8" },
-      { id:2, name:"Garmin Enduro 3", price:900, brand:"Garmin", activity:["Ulkoilu","Juoksu"], gps:2, battery:320, music:0, smart:[0,2], img:"https://via.placeholder.com/300x200?text=Enduro+3" },
-      { id:3, name:"Amazfit T-Rex 3", price:200, brand:"Amazfit", activity:["Kaikki"], gps:1, battery:180, music:0, smart:[0], img:"https://via.placeholder.com/300x200?text=T-Rex+3" },
-      { id:4, name:"Coros Pace Pro", price:349, brand:"Coros", activity:["Juoksu","Kuntosali"], gps:1, battery:38, music:0, smart:[0], img:"https://via.placeholder.com/300x200?text=Pace+Pro" },
-      { id:5, name:"Garmin Forerunner 970", price:750, brand:"Garmin", activity:["Juoksu","Triathlon"], gps:2, battery:26, music:0, smart:[0,1,2], img:"https://via.placeholder.com/300x200?text=Forerunner+970" },
-      { id:6, name:"Polar Grit X2 Pro", price:750, brand:"Polar", activity:["Ulkoilu","Juoksu"], gps:2, battery:43, music:0, smart:[0,2], img:"https://via.placeholder.com/300x200?text=Grit+X2+Pro" },
-      { id:7, name:"Apple Watch Ultra 2", price:749, brand:"Apple", activity:["Arki + urheilu","Uinti"], gps:1, battery:2, music:1, smart:[0,1,2], img:"https://via.placeholder.com/300x200?text=Ultra+2" },
-      { id:8, name:"Suunto Run", price:249, brand:"Suunto", activity:["Juoksu"], gps:1, battery:30, music:0, smart:[0], img:"https://via.placeholder.com/300x200?text=Suunto+Run" },
-      { id:9, name:"Garmin Forerunner 265", price:450, brand:"Garmin", activity:["Juoksu","Uinti","Pyöräily"], gps:2, battery:13, music:2, smart:[1], img:"https://via.placeholder.com/300x200?text=Forerunner+265" },
-      { id:10, name:"Coros Pace 3", price:229, brand:"Coros", activity:["Juoksu","Pyöräily","Uinti"], gps:2, battery:15, music:1, smart:[0], img:"https://via.placeholder.com/300x200?text=Pace+3" },
-      { id:11, name:"Garmin Fenix 7 Pro", price:900, brand:"Garmin", activity:["Ulkoilu","Juoksu"], gps:2, battery:22, music:1, smart:[0,2], img:"https://via.placeholder.com/300x200?text=Fenix+7+Pro" },
-      { id:12, name:"Garmin Forerunner 965", price:600, brand:"Garmin", activity:["Juoksu","Pyöräily"], gps:2, battery:23, music:1, smart:[0], img:"https://via.placeholder.com/300x200?text=Forerunner+965" },
-      { id:13, name:"Garmin vívoactive 5", price:270, brand:"Garmin", activity:["Arki + urheilu","Uinti"], gps:1, battery:11, music:1, smart:[1], img:"https://via.placeholder.com/300x200?text=Vivoactive+5" },
-      { id:14, name:"Garmin Instinct 3 Solar", price:400, brand:"Garmin", activity:["Ulkoilu"], gps:2, battery:28, music:1, smart:[0], img:"https://via.placeholder.com/300x200?text=Instinct+3" },
-      { id:15, name:"Coros Apex 2", price:349, brand:"Coros", activity:["Juoksu","Triathlon"], gps:1, battery:14, music:1, smart:[0], img:"https://via.placeholder.com/300x200?text=Apex+2" },
-      { id:16, name:"Suunto Race", price:399, brand:"Suunto", activity:["Juoksu"], gps:2, battery:26, music:1, smart:[0], img:"https://via.placeholder.com/300x200?text=Suunto+Race" },
-      { id:17, name:"Polar Vantage V3", price:599, brand:"Polar", activity:["Juoksu","Pyöräily","Uinti"], gps:2, battery:10, music:0, smart:[0], img:"https://via.placeholder.com/300x200?text=Vantage+V3" },
-      { id:18, name:"Garmin Lily 2", price:250, brand:"Garmin", activity:["Arki + urheilu"], gps:0, battery:5, music:1, smart:[0], img:"https://via.placeholder.com/300x200?text=Lily+2" },
-      { id:19, name:"Apple Watch Ultra 3", price:899, brand:"Apple", activity:["Kaikki"], gps:2, battery:3, music:2, smart:[0,1,2], img:"https://via.placeholder.com/300x200?text=Ultra+3" },
-      { id:20, name:"Coros Vertix 2S", price:699, brand:"Coros", activity:["Ulkoilu","Juoksu"], gps:2, battery:36, music:0, smart:[0], img:"https://via.placeholder.com/300x200?text=Vertix+2S" },
-      // Lisää tähän lisää – tai hae ulkoisesta
+      { id:1, name:"Garmin Fenix 8 AMOLED", price:1099, brand:"Garmin", activity:["Juoksu","Pyöräily","Uinti","Ulkoilu"], gps:2, battery:47, music:0, smart:[0,1,2], img:"https://via.placeholder.com/300x200/1D4ED8/FFFFFF?text=Fenix+8" },
+      { id:2, name:"Garmin Enduro 3", price:899, brand:"Garmin", activity:["Ulkoilu","Juoksu"], gps:2, battery:320, music:0, smart:[0,2], img:"https://via.placeholder.com/300x200/7C3AED/FFFFFF?text=Enduro+3" },
+      { id:3, name:"Amazfit T-Rex 3", price:199, brand:"Amazfit", activity:["Kaikki"], gps:1, battery:180, music:0, smart:[0], img:"https://via.placeholder.com/300x200/10B981/FFFFFF?text=T-Rex+3" },
+      { id:4, name:"Coros Pace Pro", price:349, brand:"Coros", activity:["Juoksu","Kuntosali"], gps:1, battery:38, music:0, smart:[0], img:"https://via.placeholder.com/300x200/F59E0B/FFFFFF?text=Pace+Pro" },
+      { id:5, name:"Polar Grit X2 Pro", price:749, brand:"Polar", activity:["Ulkoilu","Juoksu"], gps:2, battery:43, music:0, smart:[0,2], img:"https://via.placeholder.com/300x200/EF4444/FFFFFF?text=Grit+X2" },
+      { id:6, name:"Apple Watch Ultra 3", price:899, brand:"Apple", activity:["Kaikki"], gps:2, battery:3, music:2, smart:[0,1,2], img:"https://via.placeholder.com/300x200/1F2937/FFFFFF?text=Ultra+3" },
+      { id:7, name:"Suunto Race", price:399, brand:"Suunto", activity:["Juoksu"], gps:2, battery:26, music:1, smart:[0], img:"https://via.placeholder.com/300x200/6366F1/FFFFFF?text=Suunto" },
+      { id:8, name:"Garmin Forerunner 265", price:449, brand:"Garmin", activity:["Juoksu","Uinti","Pyöräily"], gps:2, battery:13, music:2, smart:[0,1], img:"https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=265" },
+      { id:9, name:"Coros Vertix 2S", price:699, brand:"Coros", activity:["Ulkoilu"], gps:2, battery:60, music:0, smart:[0,2], img:"https://via.placeholder.com/300x200/8B5CF6/FFFFFF?text=Vertix" },
+      { id:10, name:"Garmin Venu 3", price:499, brand:"Garmin", activity:["Arki + urheilu"], gps:1, battery:14, music:2, smart:[0,1,2], img:"https://via.placeholder.com/300x200/10B981/FFFFFF?text=Venu+3" }
     ];
-    fallbackWatches.updated = '2025-11-15';
 
-    // Lataa data sivun latautuessa
+    // Käynnistä lataus
     loadWatches();
 
-    // Suosituslogiikka (sama kuin ennen)
+    // Lomakkeen käsittely
     document.getElementById('quiz').addEventListener('submit', e => {
       e.preventDefault();
-      if (watches.length === 0) { alert('Ladataan dataa... Odota hetki ja yritä uudelleen.'); return; }
+      if (watches.length === 0) return alert('Odota hetki – data latautuu...');
+
       const form = e.target;
       const answers = {
         activity: form.activity.value,
@@ -173,12 +188,14 @@
         gps: parseInt(form.gps.value || 0),
         battery: parseInt(form.battery.value),
         music: parseInt(form.music.value),
-        smart: Array.from(form.querySelectorAll('input[name="smart"]:checked')).map(c => parseInt(c.value))
+        smart: Array.from(form.querySelectorAll('input[name="smart"]:checked'))
+                 .map(c => parseInt(c.value))
+                 .filter(v => v !== 3) // Poista "Ei tarvita"
       };
 
       const scores = watches.map(watch => {
         let score = 0;
-        if (watch.activity.some(a => a.includes(answers.activity))) score += 30;
+        if (watch.activity.some(a => answers.activity.includes(a) || a.includes(answers.activity))) score += 30;
         if (watch.price <= answers.budget) score += 20;
         if (watch.gps >= answers.gps) score += 15;
         if (watch.battery >= answers.battery) score += 15;
@@ -190,7 +207,7 @@
       const top3 = scores.sort((a,b) => b.score - a.score).slice(0,3);
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = `
-        <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">Suositukset sinulle (${top3.length} mallia vertailussa)</h2>
+        <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">Suositukset sinulle</h2>
         <div class="grid md:grid-cols-3 gap-6">
           ${top3.map((item, i) => `
             <div class="card bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -202,9 +219,9 @@
                 <div class="flex flex-wrap gap-1 mt-3">
                   ${item.watch.activity.slice(0,2).map(a => `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${a}</span>`).join("")}
                 </div>
-                <button onclick="window.open('https://www.verkkokauppa.com/search?q=${encodeURIComponent(item.watch.name)}', '_blank')" class="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 rounded-xl hover:shadow-lg transition">
+                <a href="https://verkkokauppa.com/fi/search?query=${encodeURIComponent(item.watch.name)}" target="_blank" class="block w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 rounded-xl text-center hover:shadow-lg transition">
                   Katso tarjous
-                </button>
+                </a>
               </div>
             </div>
           `).join("")}
